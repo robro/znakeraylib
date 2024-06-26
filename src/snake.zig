@@ -81,19 +81,4 @@ pub const Snake = struct {
         self.facing = self.start_facing;
         self.is_alive = true;
     }
-
-    // pub fn pickDir(self: *Snake, food: *Food) void {
-    //     // Bad snake AI for testing (to be removed)
-    //     if ((self.facing == .UP and self.head.y <= food.pos.y) or
-    //         (self.facing == .DOWN and self.head.y >= food.pos.y))
-    //     {
-    //         self.facing = if (self.head.x < food.pos.x) .RIGHT else .LEFT;
-    //         return;
-    //     }
-    //     if ((self.facing == .LEFT and self.head.x <= food.pos.x) or
-    //         (self.facing == .RIGHT and self.head.x >= food.pos.x))
-    //     {
-    //         self.facing = if (self.head.y < food.pos.y) .DOWN else .UP;
-    //     }
-    // }
 };
