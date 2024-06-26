@@ -47,10 +47,10 @@ pub fn grow(self: *Snake) void {
 
 pub fn handleInput(self: *Snake, input: c_int) void {
     switch (input) {
-        rl.KEY_UP => self.facing = .UP,
-        rl.KEY_DOWN => self.facing = .DOWN,
-        rl.KEY_LEFT => self.facing = .LEFT,
-        rl.KEY_RIGHT => self.facing = .RIGHT,
+        rl.KEY_UP => self.facing = if (self.facing != .DOWN) .UP else .DOWN,
+        rl.KEY_DOWN => self.facing = if (self.facing != .UP) .DOWN else .UP,
+        rl.KEY_LEFT => self.facing = if (self.facing != .RIGHT) .LEFT else .RIGHT,
+        rl.KEY_RIGHT => self.facing = if (self.facing != .LEFT) .RIGHT else .LEFT,
         else => {},
     }
 }
