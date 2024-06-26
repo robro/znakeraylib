@@ -8,7 +8,7 @@ char: u8,
 pos: Position,
 
 pub fn create(grid: *Grid) Food {
-    return Food{ .char = 'o', .pos = Food.getRandPos(grid) };
+    return Food{ .char = 'f', .pos = Food.getRandPos(grid) };
 }
 
 pub fn update(self: *Food) void {

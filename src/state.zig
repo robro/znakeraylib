@@ -36,7 +36,7 @@ score: u32 = 0,
 hiscore: u32 = 0,
 gameover: bool = false,
 
-const gameover_wait: u64 = 1_000; // milliseconds
+const gameover_wait: u64 = 1_000; // ms
 
 pub fn create(grid: *Grid, snake: *Snake, food: *Food) !State {
     return State{
@@ -82,7 +82,15 @@ pub fn update(self: *State) void {
     }
 }
 
-pub fn printToBuf(self: *State, buffer: *const []u8) !void {
+pub fn printHUD(self: *State, buffer: *const []u8) !void {
+    _ = try std.fmt.bufPrintZ(
+        buffer.*,
+        "score: {d:<3} best: {d:<3}",
+        .{ self.score, self.hiscore },
+    );
+}
+
+pub fn printGrid(self: *State, buffer: *const []u8) !void {
     self.grid.empty();
     for (self.objects) |obj| obj.draw(self.grid);
     try self.grid.printToBuf(buffer);

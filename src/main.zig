@@ -7,30 +7,37 @@ const State = @import("state.zig");
 
 pub fn main() !void {
     // Init -------------------------------------------------------------------
-    const win_width = 800; // pixels
-    const win_height = 800; // pixels
-    const grid_width = 20; // chars
-    const grid_height = 20; // chars
+    const font_size: f32 = 64;
+    const grid_width = 12; // chars
+    const grid_height = 12; // chars
+    const hud_height: c_int = @intFromFloat(font_size * 2);
+    const win_width: c_int = (grid_width + 1) * @as(c_int, (@intFromFloat(font_size)));
+    const win_height: c_int = (grid_height + 1) * @as(c_int, (@intFromFloat(font_size))) + hud_height;
+    const margin: f32 = font_size / 2;
 
     rl.SetConfigFlags(rl.FLAG_MSAA_4X_HINT | rl.FLAG_VSYNC_HINT);
     rl.InitWindow(win_width, win_height, "Znake");
     defer rl.CloseWindow();
 
-    const font = rl.LoadFont("resources/fonts/consola.ttf");
+    const font = rl.LoadFontEx("resources/fonts/consola.ttf", font_size, null, 0);
     const font_color: rl.Color = rl.WHITE;
     const bg_color: rl.Color = rl.DARKBROWN;
+    const grid_color: rl.Color = rl.BROWN;
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
 
-    var grid = try Grid.create('.', grid_width, grid_height, &allocator);
+    var grid = try Grid.create(' ', grid_width, grid_height, &allocator);
     defer grid.free(&allocator);
 
     const grid_buf = try allocator.allocSentinel(u8, (grid_width + 1) * grid_height, 0);
     defer allocator.free(grid_buf);
 
-    var snake = try Snake.create('0', 10, .{ .x = 10, .y = 10 }, &allocator);
+    const hud_buf = try allocator.allocSentinel(u8, 30, 0);
+    defer allocator.free(hud_buf);
+
+    var snake = try Snake.create('0', 4, .{ .x = 4, .y = 2 }, &allocator);
     defer snake.free();
 
     var food = Food.create(&grid);
@@ -47,10 +54,15 @@ pub fn main() !void {
 
         // Draw ---------------------------------------------------------------
         rl.BeginDrawing();
-
         rl.ClearBackground(bg_color);
-        try state.printToBuf(&grid_buf);
-        rl.DrawTextEx(font, grid_buf, .{ .x = 78, .y = 64 }, 32, 16, font_color);
+
+        try state.printHUD(&hud_buf);
+        rl.DrawTextEx(font, hud_buf, .{ .x = margin, .y = margin }, font_size, 0, font_color);
+
+        rl.DrawRectangle(0, hud_height, win_width, win_height, grid_color);
+
+        try state.printGrid(&grid_buf);
+        rl.DrawTextEx(font, grid_buf, .{ .x = margin, .y = hud_height + margin }, font_size, margin, font_color);
 
         rl.EndDrawing();
     }
