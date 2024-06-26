@@ -13,7 +13,6 @@ start_pos: Position,
 body: std.ArrayList(Position),
 head: Position,
 facing: Direction,
-is_alive: bool,
 
 pub fn create(start_len: usize, start_pos: Position, allocator: std.mem.Allocator) !Snake {
     var body = std.ArrayList(Position).init(allocator);
@@ -29,7 +28,6 @@ pub fn create(start_len: usize, start_pos: Position, allocator: std.mem.Allocato
         .body = body,
         .head = body.items[0],
         .facing = .RIGHT,
-        .is_alive = true,
     };
 }
 
@@ -79,5 +77,4 @@ pub fn reset(self: *Snake) void {
         part.y = self.start_pos.y;
     }
     self.facing = self.start_facing;
-    self.is_alive = true;
 }
