@@ -15,7 +15,7 @@ pub fn update(self: *Food) void {
     _ = self;
 }
 
-pub fn addToGrid(self: *Food, grid: *Grid) void {
+pub fn draw(self: *Food, grid: *Grid) void {
     grid.array[@as(usize, @intCast(self.pos.y))][@as(usize, @intCast(self.pos.x))] = self.char;
 }
 
@@ -23,7 +23,7 @@ pub fn reset(self: *Food, grid: *Grid) void {
     self.pos = Food.getRandPos(grid);
 }
 
-pub fn getRandPos(grid: *Grid) Position {
+fn getRandPos(grid: *Grid) Position {
     return Position{
         .x = rng.intRangeLessThan(i32, 0, @as(i32, @intCast(grid.width))),
         .y = rng.intRangeLessThan(i32, 0, @as(i32, @intCast(grid.height))),

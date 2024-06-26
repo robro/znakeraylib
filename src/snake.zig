@@ -69,7 +69,7 @@ pub fn update(self: *Snake) void {
     _ = self.body.pop();
 }
 
-pub fn addToGrid(self: *Snake, grid: *Grid) void {
+pub fn draw(self: *Snake, grid: *Grid) void {
     for (self.body.items) |part| {
         if (part.x < 0 or part.x >= grid.width or part.y < 0 or part.y >= grid.height) continue;
         grid.array[@as(usize, @intCast(part.y))][@as(usize, @intCast(part.x))] = self.char;

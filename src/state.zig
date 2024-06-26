@@ -14,9 +14,9 @@ const Object = union(enum) {
         }
     }
 
-    pub fn addToGrid(self: Object, grid: *Grid) void {
+    pub fn draw(self: Object, grid: *Grid) void {
         switch (self) {
-            inline else => |case| case.addToGrid(grid),
+            inline else => |case| case.draw(grid),
         }
     }
 
@@ -84,16 +84,16 @@ pub fn update(self: *State) void {
 
 pub fn printToBuf(self: *State, buffer: *const []u8) !void {
     self.grid.empty();
-    for (self.objects) |obj| obj.addToGrid(self.grid);
+    for (self.objects) |obj| obj.draw(self.grid);
     try self.grid.printToBuf(buffer);
 }
 
-pub fn gameOver(self: *State) void {
+fn gameOver(self: *State) void {
     self.gameover = true;
     self.timer.reset();
 }
 
-pub fn reset(self: *State) void {
+fn reset(self: *State) void {
     for (self.objects) |obj| obj.reset(self.grid);
     self.gameover = false;
     self.score = 0;
