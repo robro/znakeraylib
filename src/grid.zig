@@ -15,14 +15,14 @@ pub const Grid = struct {
         return Grid{ .width = width, .height = height, .array = array };
     }
 
-    pub fn free(self: *@This(), allocator: std.mem.Allocator) void {
+    pub fn free(self: *Grid, allocator: std.mem.Allocator) void {
         for (self.array) |*row| {
             allocator.free(row.*);
         }
         allocator.free(self.array);
     }
 
-    pub fn fill(self: *@This(), char: u8) void {
+    pub fn fill(self: *Grid, char: u8) void {
         for (self.array) |*row| {
             for (row.*) |*item| {
                 item.* = char;
@@ -30,7 +30,7 @@ pub const Grid = struct {
         }
     }
 
-    pub fn toString(self: *@This(), buffer: *const []u8) !void {
+    pub fn toString(self: *Grid, buffer: *const []u8) !void {
         if (buffer.len < self.array[0].len * self.height) return IndexError.OutOfBounds;
         for (self.array, 0..) |row, i| {
             std.mem.copyForwards(u8, buffer.*[row.len * i + i ..], row);
