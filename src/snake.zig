@@ -31,7 +31,7 @@ pub const Snake = struct {
             part.* = .{ .x = start_pos.x - @as(i32, @intCast(i)), .y = start_pos.y };
         }
         return Snake{
-            .char = 'O',
+            .char = '0',
             .start_len = start_len,
             .start_facing = .RIGHT,
             .start_pos = start_pos,
@@ -42,12 +42,22 @@ pub const Snake = struct {
         };
     }
 
-    pub fn free(self: *@This()) void {
+    pub fn free(self: *Snake) void {
         self.body.deinit();
     }
 
     pub fn grow(self: *Snake) void {
         self.body.append(.{ .x = -1, .y = -1 }) catch unreachable;
+    }
+
+    pub fn handleInput(self: *Snake, input: c_int) void {
+        switch (input) {
+            rl.KEY_UP => self.facing = .UP,
+            rl.KEY_DOWN => self.facing = .DOWN,
+            rl.KEY_LEFT => self.facing = .LEFT,
+            rl.KEY_RIGHT => self.facing = .RIGHT,
+            else => {},
+        }
     }
 
     pub fn update(self: *Snake) void {

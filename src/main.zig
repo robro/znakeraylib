@@ -27,21 +27,16 @@ pub fn main() !void {
 
     const grid_buf = try allocator.allocSentinel(u8, (grid_width + 1) * grid_height, 0);
     defer allocator.free(grid_buf);
-    var grid_char: u8 = '.';
+    const grid_char: u8 = '.';
 
-    var snake = try Snake.create(4, .{ .x = 10, .y = 10 }, allocator);
+    var snake = try Snake.create(10, .{ .x = 10, .y = 10 }, allocator);
     defer snake.free();
 
-    rl.SetTargetFPS(1);
+    rl.SetTargetFPS(10);
 
     while (!rl.WindowShouldClose()) {
         // Input --------------------------------------------------------------
-        // TODO: replace with actual controls
-        grid_char = '.';
-        if (rl.IsKeyDown(rl.KEY_UP)) grid_char = 'U';
-        if (rl.IsKeyDown(rl.KEY_DOWN)) grid_char = 'D';
-        if (rl.IsKeyDown(rl.KEY_LEFT)) grid_char = 'L';
-        if (rl.IsKeyDown(rl.KEY_RIGHT)) grid_char = 'R';
+        snake.handleInput(rl.GetKeyPressed());
 
         // Update -------------------------------------------------------------
         snake.update();
