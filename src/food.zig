@@ -1,9 +1,8 @@
+const Food = @This();
 const std = @import("std");
 const rng = std.crypto.random;
-const Food = @This();
-const types = @import("types.zig");
 const Grid = @import("grid.zig");
-const Position = types.Position;
+const Position = @import("types.zig").Position;
 
 char: u8,
 pos: Position,

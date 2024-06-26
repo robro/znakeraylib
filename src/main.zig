@@ -30,7 +30,7 @@ pub fn main() !void {
     const grid_buf = try allocator.allocSentinel(u8, (grid_width + 1) * grid_height, 0);
     defer allocator.free(grid_buf);
 
-    var snake = try Snake.create(10, .{ .x = 10, .y = 10 }, &allocator);
+    var snake = try Snake.create('0', 10, .{ .x = 10, .y = 10 }, &allocator);
     defer snake.free();
 
     var food = Food.create(&grid);

@@ -34,8 +34,9 @@ objects: [2]Object,
 timer: std.time.Timer,
 score: u32 = 0,
 hiscore: u32 = 0,
-gameover_wait: u64 = 1_000, // milliseconds
 gameover: bool = false,
+
+const gameover_wait: u64 = 1_000; // milliseconds
 
 pub fn create(grid: *Grid, snake: *Snake, food: *Food) !State {
     return State{
@@ -53,7 +54,7 @@ pub fn handleInput(self: *State, input: c_int) void {
 
 pub fn update(self: *State) void {
     if (self.gameover) {
-        if (self.timer.read() < self.gameover_wait * std.time.ns_per_ms) return;
+        if (self.timer.read() < State.gameover_wait * std.time.ns_per_ms) return;
         self.reset();
         return;
     }

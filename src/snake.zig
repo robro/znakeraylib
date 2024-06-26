@@ -1,6 +1,6 @@
+const Snake = @This();
 const std = @import("std");
 const rl = @import("raylib.zig");
-const Snake = @This();
 const Grid = @import("grid.zig");
 const types = @import("types.zig");
 const Direction = types.Direction;
@@ -8,13 +8,19 @@ const Position = types.Position;
 
 char: u8,
 start_len: usize,
-start_facing: Direction,
 start_pos: Position,
 body: std.ArrayList(Position),
 head: Position,
 facing: Direction,
 
-pub fn create(start_len: usize, start_pos: Position, allocator: *const std.mem.Allocator) !Snake {
+const start_facing: Direction = .RIGHT;
+
+pub fn create(
+    char: u8,
+    start_len: usize,
+    start_pos: Position,
+    allocator: *const std.mem.Allocator,
+) !Snake {
     var body = std.ArrayList(Position).init(allocator.*);
     try body.resize(start_len);
     for (body.items, 0..) |*part, i| {
@@ -22,13 +28,12 @@ pub fn create(start_len: usize, start_pos: Position, allocator: *const std.mem.A
         part.y = start_pos.y;
     }
     return Snake{
-        .char = '0',
+        .char = char,
         .start_len = start_len,
-        .start_facing = .RIGHT,
         .start_pos = start_pos,
         .body = body,
         .head = body.items[0],
-        .facing = .RIGHT,
+        .facing = Snake.start_facing,
     };
 }
 
@@ -78,5 +83,5 @@ pub fn reset(self: *Snake, _: *Grid) void {
         part.y = self.start_pos.y;
     }
     self.head = self.body.items[0];
-    self.facing = self.start_facing;
+    self.facing = Snake.start_facing;
 }

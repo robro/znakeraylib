@@ -1,5 +1,5 @@
-const std = @import("std");
 const Grid = @This();
+const std = @import("std");
 
 const IndexError = error{OutOfBounds};
 
