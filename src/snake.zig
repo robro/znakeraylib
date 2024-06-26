@@ -1,18 +1,9 @@
 const std = @import("std");
 const rl = @import("raylib.zig");
 const Grid = @import("grid.zig").Grid;
-
-const Direction = enum {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT,
-};
-
-const Position = struct {
-    x: i32,
-    y: i32,
-};
+const types = @import("types.zig");
+const Direction = types.Direction;
+const Position = types.Position;
 
 pub const Snake = struct {
     char: u8,
@@ -20,7 +11,7 @@ pub const Snake = struct {
     start_facing: Direction,
     start_pos: Position,
     body: std.ArrayList(Position),
-    head: *Position,
+    head: Position,
     facing: Direction,
     is_alive: bool,
 
@@ -36,7 +27,7 @@ pub const Snake = struct {
             .start_facing = .RIGHT,
             .start_pos = start_pos,
             .body = body,
-            .head = &body.items[0],
+            .head = body.items[0],
             .facing = .RIGHT,
             .is_alive = true,
         };
@@ -70,10 +61,11 @@ pub const Snake = struct {
             .RIGHT => new_x += 1,
         }
         self.body.insert(0, .{ .x = new_x, .y = new_y }) catch unreachable;
+        self.head = self.body.items[0];
         _ = self.body.pop();
     }
 
-    pub fn addToGrid(self: *Snake, grid: *Grid) void {
+    pub fn printToGrid(self: *Snake, grid: *Grid) void {
         for (self.body.items) |part| {
             if (part.x < 0 or part.x >= grid.width or part.y < 0 or part.y >= grid.height) continue;
             grid.array[@as(usize, @intCast(part.y))][@as(usize, @intCast(part.x))] = self.char;

@@ -2,6 +2,7 @@ const std = @import("std");
 const rl = @import("raylib.zig");
 const Grid = @import("grid.zig").Grid;
 const Snake = @import("snake.zig").Snake;
+const Food = @import("food.zig").Food;
 
 pub fn main() !void {
     // Init -------------------------------------------------------------------
@@ -32,6 +33,9 @@ pub fn main() !void {
     var snake = try Snake.create(10, .{ .x = 10, .y = 10 }, allocator);
     defer snake.free();
 
+    const rng = std.crypto.random;
+    var food = Food.create(rng, grid);
+
     rl.SetTargetFPS(10);
 
     while (!rl.WindowShouldClose()) {
@@ -40,13 +44,18 @@ pub fn main() !void {
 
         // Update -------------------------------------------------------------
         snake.update();
+        if (std.meta.eql(snake.head, food.pos)) {
+            snake.grow();
+            food.reset(rng, grid);
+        }
 
         // Draw ---------------------------------------------------------------
         rl.BeginDrawing();
 
         rl.ClearBackground(bg_color);
         grid.fill(grid_char);
-        snake.addToGrid(&grid);
+        snake.printToGrid(&grid);
+        food.printToGrid(&grid);
         try grid.toString(&grid_buf);
         rl.DrawTextEx(font, grid_buf, .{ .x = 78, .y = 64 }, 32, 16, font_color);
 
