@@ -3,6 +3,7 @@ const rl = @import("raylib.zig");
 const Grid = @import("grid.zig");
 const Snake = @import("snake.zig");
 const Food = @import("food.zig");
+const State = @import("state.zig");
 
 pub fn main() !void {
     // Init -------------------------------------------------------------------
@@ -23,40 +24,34 @@ pub fn main() !void {
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
 
-    var grid = try Grid.create(grid_width, grid_height, allocator);
-    defer grid.free(allocator);
+    var grid = try Grid.create('.', grid_width, grid_height, &allocator);
+    defer grid.free(&allocator);
 
     const grid_buf = try allocator.allocSentinel(u8, (grid_width + 1) * grid_height, 0);
     defer allocator.free(grid_buf);
-    const grid_char: u8 = '.';
 
-    var snake = try Snake.create(10, .{ .x = 10, .y = 10 }, allocator);
+    var snake = try Snake.create(10, .{ .x = 10, .y = 10 }, &allocator);
     defer snake.free();
 
-    const rng = std.crypto.random;
-    var food = Food.create(rng, grid);
+    var food = Food.create(&grid);
+
+    var state = try State.create(&grid, &snake, &food, &allocator);
+    defer state.free(&allocator);
 
     rl.SetTargetFPS(10);
 
     while (!rl.WindowShouldClose()) {
         // Input --------------------------------------------------------------
-        snake.handleInput(rl.GetKeyPressed());
+        state.handleInput(rl.GetKeyPressed());
 
         // Update -------------------------------------------------------------
-        snake.update();
-        if (std.meta.eql(snake.head, food.pos)) {
-            snake.grow();
-            food.reset(rng, grid);
-        }
+        state.update();
 
         // Draw ---------------------------------------------------------------
         rl.BeginDrawing();
 
         rl.ClearBackground(bg_color);
-        grid.fill(grid_char);
-        snake.printToGrid(&grid);
-        food.printToGrid(&grid);
-        try grid.toString(&grid_buf);
+        try state.printToBuf(&grid_buf);
         rl.DrawTextEx(font, grid_buf, .{ .x = 78, .y = 64 }, 32, 16, font_color);
 
         rl.EndDrawing();

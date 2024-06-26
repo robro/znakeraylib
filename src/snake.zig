@@ -14,11 +14,12 @@ body: std.ArrayList(Position),
 head: Position,
 facing: Direction,
 
-pub fn create(start_len: usize, start_pos: Position, allocator: std.mem.Allocator) !Snake {
-    var body = std.ArrayList(Position).init(allocator);
+pub fn create(start_len: usize, start_pos: Position, allocator: *const std.mem.Allocator) !Snake {
+    var body = std.ArrayList(Position).init(allocator.*);
     try body.resize(start_len);
     for (body.items, 0..) |*part, i| {
-        part.* = .{ .x = start_pos.x - @as(i32, @intCast(i)), .y = start_pos.y };
+        part.x = start_pos.x - @as(i32, @intCast(i));
+        part.y = start_pos.y;
     }
     return Snake{
         .char = '0',
@@ -63,18 +64,19 @@ pub fn update(self: *Snake) void {
     _ = self.body.pop();
 }
 
-pub fn printToGrid(self: *Snake, grid: *Grid) void {
+pub fn addToGrid(self: *Snake, grid: *Grid) void {
     for (self.body.items) |part| {
         if (part.x < 0 or part.x >= grid.width or part.y < 0 or part.y >= grid.height) continue;
         grid.array[@as(usize, @intCast(part.y))][@as(usize, @intCast(part.x))] = self.char;
     }
 }
 
-pub fn reset(self: *Snake) void {
+pub fn reset(self: *Snake, _: *Grid) void {
     self.body.shrinkAndFree(self.start_len);
     for (self.body.items, 0..) |*part, i| {
         part.x = self.start_pos.x - @as(i32, @intCast(i));
         part.y = self.start_pos.y;
     }
+    self.head = self.body.items[0];
     self.facing = self.start_facing;
 }
