@@ -1,6 +1,7 @@
 const std = @import("std");
 const rl = @import("raylib.zig");
 const Grid = @import("grid.zig").Grid;
+const Snake = @import("snake.zig").Snake;
 
 pub fn main() !void {
     // Init -------------------------------------------------------------------
@@ -19,12 +20,8 @@ pub fn main() !void {
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
-    defer {
-        switch (gpa.deinit()) {
-            .leak => @panic("leaked memory"),
-            else => {},
-        }
-    }
+    defer _ = gpa.deinit();
+
     var grid = try Grid.create(grid_width, grid_height, allocator);
     defer grid.free(allocator);
 
@@ -32,7 +29,10 @@ pub fn main() !void {
     defer allocator.free(grid_buf);
     var grid_char: u8 = '.';
 
-    rl.SetTargetFPS(60);
+    var snake = try Snake.create(4, .{ .x = 10, .y = 10 }, allocator);
+    defer snake.free();
+
+    rl.SetTargetFPS(1);
 
     while (!rl.WindowShouldClose()) {
         // Input --------------------------------------------------------------
@@ -43,11 +43,15 @@ pub fn main() !void {
         if (rl.IsKeyDown(rl.KEY_LEFT)) grid_char = 'L';
         if (rl.IsKeyDown(rl.KEY_RIGHT)) grid_char = 'R';
 
+        // Update -------------------------------------------------------------
+        snake.update();
+
         // Draw ---------------------------------------------------------------
         rl.BeginDrawing();
 
         rl.ClearBackground(bg_color);
         grid.fill(grid_char);
+        snake.addToGrid(&grid);
         try grid.toString(&grid_buf);
         rl.DrawTextEx(font, grid_buf, .{ .x = 78, .y = 64 }, 32, 16, font_color);
 
