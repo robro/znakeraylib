@@ -1,8 +1,8 @@
 const std = @import("std");
 const rl = @import("raylib.zig");
-const Grid = @import("grid.zig").Grid;
-const Snake = @import("snake.zig").Snake;
-const Food = @import("food.zig").Food;
+const Grid = @import("grid.zig");
+const Snake = @import("snake.zig");
+const Food = @import("food.zig");
 
 pub fn main() !void {
     // Init -------------------------------------------------------------------
