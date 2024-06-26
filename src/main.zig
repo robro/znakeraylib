@@ -1,24 +1,23 @@
 const std = @import("std");
-const ray = @import("raylib.zig");
+const rl = @import("raylib.zig");
+const Grid = @import("grid.zig").Grid;
 
 pub fn main() !void {
-    try ray_main();
-    try old_main(); // remove this if you don't need it
-    try hints();
-}
+    // Init -------------------------------------------------------------------
+    const win_width = 800; // pixels
+    const win_height = 800; // pixels
+    const grid_width = 20; // chars
+    const grid_height = 20; // chars
 
-fn ray_main() !void {
-    // const monitor = ray.GetCurrentMonitor();
-    // const width = ray.GetMonitorWidth(monitor);
-    // const height = ray.GetMonitorHeight(monitor);
-    const width = 800;
-    const height = 450;
+    rl.SetConfigFlags(rl.FLAG_MSAA_4X_HINT | rl.FLAG_VSYNC_HINT);
+    rl.InitWindow(win_width, win_height, "Znake");
+    defer rl.CloseWindow();
 
-    ray.SetConfigFlags(ray.FLAG_MSAA_4X_HINT | ray.FLAG_VSYNC_HINT);
-    ray.InitWindow(width, height, "zig raylib example");
-    defer ray.CloseWindow();
+    const font = rl.LoadFont("resources/fonts/consola.ttf");
+    const font_color: rl.Color = rl.WHITE;
+    const bg_color: rl.Color = rl.DARKBROWN;
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{ .stack_trace_frames = 8 }){};
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer {
         switch (gpa.deinit()) {
@@ -26,79 +25,32 @@ fn ray_main() !void {
             else => {},
         }
     }
+    var grid = try Grid.create(grid_width, grid_height, allocator);
+    defer grid.free(allocator);
 
-    const colors = [_]ray.Color{ ray.GRAY, ray.RED, ray.GOLD, ray.LIME, ray.BLUE, ray.VIOLET, ray.BROWN };
-    const colors_len: i32 = @intCast(colors.len);
-    var current_color: i32 = 2;
-    var hint = true;
+    const grid_buf = try allocator.allocSentinel(u8, (grid_width + 1) * grid_height, 0);
+    defer allocator.free(grid_buf);
+    var grid_char: u8 = '.';
 
-    while (!ray.WindowShouldClose()) {
-        // input
-        var delta: i2 = 0;
-        if (ray.IsKeyPressed(ray.KEY_UP)) delta += 1;
-        if (ray.IsKeyPressed(ray.KEY_DOWN)) delta -= 1;
-        if (delta != 0) {
-            current_color = @mod(current_color + delta, colors_len);
-            hint = false;
-        }
+    rl.SetTargetFPS(60);
 
-        // draw
-        {
-            ray.BeginDrawing();
-            defer ray.EndDrawing();
+    while (!rl.WindowShouldClose()) {
+        // Input --------------------------------------------------------------
+        // TODO: replace with actual controls
+        grid_char = '.';
+        if (rl.IsKeyDown(rl.KEY_UP)) grid_char = 'U';
+        if (rl.IsKeyDown(rl.KEY_DOWN)) grid_char = 'D';
+        if (rl.IsKeyDown(rl.KEY_LEFT)) grid_char = 'L';
+        if (rl.IsKeyDown(rl.KEY_RIGHT)) grid_char = 'R';
 
-            ray.ClearBackground(colors[@intCast(current_color)]);
-            if (hint) ray.DrawText("press up or down arrow to change background color", 120, 140, 20, ray.BLUE);
-            ray.DrawText("Congrats! You created your first window!", 190, 200, 20, ray.BLACK);
+        // Draw ---------------------------------------------------------------
+        rl.BeginDrawing();
 
-            // now lets use an allocator to create some dynamic text
-            // pay attention to the Z in `allocPrintZ` that is a convention
-            // for functions that return zero terminated strings
-            const seconds: u32 = @intFromFloat(ray.GetTime());
-            const dynamic = try std.fmt.allocPrintZ(allocator, "running since {d} seconds", .{seconds});
-            defer allocator.free(dynamic);
-            ray.DrawText(dynamic, 300, 250, 20, ray.WHITE);
+        rl.ClearBackground(bg_color);
+        grid.fill(grid_char);
+        try grid.toString(&grid_buf);
+        rl.DrawTextEx(font, grid_buf, .{ .x = 78, .y = 64 }, 32, 16, font_color);
 
-            ray.DrawFPS(width - 100, 10);
-        }
+        rl.EndDrawing();
     }
-}
-
-// remove this function if you don't need it
-fn old_main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
-
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
-
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
-
-    try bw.flush(); // don't forget to flush!
-}
-
-fn hints() !void {
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
-
-    try stdout.print("\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n", .{});
-    try stdout.print("Here are some hints:\n", .{});
-    try stdout.print("Run `zig build --help` to see all the options\n", .{});
-    try stdout.print("Run `zig build -Doptimize=ReleaseSmall` for a small release build\n", .{});
-    try stdout.print("Run `zig build -Doptimize=ReleaseSmall -Dstrip=true` for a smaller release build, that strips symbols\n", .{});
-    try stdout.print("Run `zig build -Draylib-optimize=ReleaseFast` for a debug build of your application, that uses a fast release of raylib (if you are only debugging your code)\n", .{});
-
-    try bw.flush(); // don't forget to flush!
-}
-
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit(); // try commenting this out and see if zig detects the memory leak!
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
 }
