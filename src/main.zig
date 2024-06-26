@@ -34,9 +34,7 @@ pub fn main() !void {
     defer snake.free();
 
     var food = Food.create(&grid);
-
-    var state = try State.create(&grid, &snake, &food, &allocator);
-    defer state.free(&allocator);
+    var state = try State.create(&grid, &snake, &food);
 
     rl.SetTargetFPS(10);
 

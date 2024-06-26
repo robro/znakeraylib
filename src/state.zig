@@ -30,29 +30,21 @@ const Object = union(enum) {
 grid: *Grid,
 snake: *Snake,
 food: *Food,
-objects: []Object,
+objects: [2]Object,
 timer: std.time.Timer,
 score: u32 = 0,
 hiscore: u32 = 0,
 gameover_wait: u64 = 1_000, // milliseconds
 gameover: bool = false,
 
-pub fn create(grid: *Grid, snake: *Snake, food: *Food, allocator: *const std.mem.Allocator) !State {
-    const objects = try allocator.alloc(Object, 2);
-    objects[0] = .{ .snake = snake };
-    objects[1] = .{ .food = food };
-
+pub fn create(grid: *Grid, snake: *Snake, food: *Food) !State {
     return State{
         .grid = grid,
         .snake = snake,
         .food = food,
-        .objects = objects,
+        .objects = [2]Object{ .{ .snake = snake }, .{ .food = food } },
         .timer = try std.time.Timer.start(),
     };
-}
-
-pub fn free(self: *State, allocator: *const std.mem.Allocator) void {
-    allocator.free(self.objects);
 }
 
 pub fn handleInput(self: *State, input: c_int) void {
