@@ -1,7 +1,7 @@
 const Grid = @This();
 const std = @import("std");
 
-const IndexError = error{OutOfBounds};
+const SizeError = error{BufferTooSmall};
 
 empty_char: u8,
 width: usize,
@@ -37,7 +37,7 @@ pub fn empty(self: *Grid) void {
 }
 
 pub fn printToBuf(self: *Grid, buffer: *const []u8) !void {
-    if (buffer.len < self.array[0].len * self.height) return IndexError.OutOfBounds;
+    if (buffer.len < self.array[0].len * self.height) return SizeError.BufferTooSmall;
     for (self.array, 0..) |row, i| {
         std.mem.copyForwards(u8, buffer.*[row.len * i + i ..], row);
         std.mem.copyForwards(u8, buffer.*[row.len * i + i + row.len ..], "\n");
