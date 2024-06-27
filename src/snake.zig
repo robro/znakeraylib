@@ -24,7 +24,7 @@ facing: Direction,
 const start_facing: Direction = .RIGHT;
 
 pub fn create(char: u8, start_len: usize, start_pos: Position, allocator: *const Allocator) !Snake {
-    var body = std.ArrayList(Part).init(allocator.*);
+    var body = ArrayList(Part).init(allocator.*);
     try body.resize(start_len);
     for (body.items, 0..) |*part, i| {
         part.facing = start_facing;
