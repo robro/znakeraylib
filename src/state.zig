@@ -78,7 +78,7 @@ pub fn update(self: *State) void {
     }
     // Handle snake self-collision
     for (self.snake.body.items[1..]) |part| {
-        if (std.meta.eql(self.snake.head, part)) {
+        if (std.meta.eql(self.snake.head.pos, part.pos)) {
             self.gameOver();
             return;
         }
