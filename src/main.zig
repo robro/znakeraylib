@@ -4,6 +4,7 @@ const Grid = @import("grid.zig");
 const Snake = @import("snake.zig");
 const Food = @import("food.zig");
 const State = @import("state.zig");
+const utils = @import("utils.zig");
 
 pub fn main() !void {
     // Init -------------------------------------------------------------------
@@ -17,6 +18,9 @@ pub fn main() !void {
     const fg_colors = [5]rl.Color{ rl.DARKBLUE, rl.DARKBROWN, rl.DARKGRAY, rl.DARKGREEN, rl.DARKPURPLE };
     const bg_colors = [5]rl.Color{ rl.BLUE, rl.BROWN, rl.GRAY, rl.GREEN, rl.PURPLE };
     const start_fps: c_int = 8;
+    const head_char: u8 = 'Z';
+    const start_len: usize = 3;
+    const start_pos = .{ .x = 4, .y = 2 };
 
     rl.SetConfigFlags(rl.FLAG_MSAA_4X_HINT | rl.FLAG_VSYNC_HINT);
     rl.InitWindow(win_width, win_height, "Znake");
@@ -39,11 +43,11 @@ pub fn main() !void {
     const hud_buf = try allocator.allocSentinel(u8, 30, 0);
     defer allocator.free(hud_buf);
 
-    var snake = try Snake.create('Z', 4, .{ .x = 4, .y = 2 }, &allocator);
+    var snake = try Snake.create(head_char, start_len, start_pos, &allocator);
     defer snake.free();
     snake.draw(&grid); // Prevent food from spawning on top of snake
 
-    var food = try Food.create(&grid);
+    var food = try Food.create(utils.getChar(snake.len()), &grid);
     var state = try State.create(&grid, &snake, &food, start_fps, fg_colors.len, &allocator);
     defer state.free(&allocator);
 

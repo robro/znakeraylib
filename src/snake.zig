@@ -78,22 +78,16 @@ pub fn update(self: *Snake) void {
 pub fn draw(self: *Snake, grid: *Grid) void {
     for (self.body.items, 0..) |part, i| {
         if (part.pos.x < 0 or part.pos.x >= grid.width or part.pos.y < 0 or part.pos.y >= grid.height) continue;
-        var char: u8 = '0';
-        if (i == 0) {
-            char = self.char;
-        } else if (i == self.body.items.len - 1) {
-            switch (part.facing) {
-                .UP => char = 'v',
-                .DOWN => char = '^',
-                .LEFT => char = '>',
-                .RIGHT => char = '<',
-            }
-        }
-        grid.array[@as(usize, @intCast(part.pos.y))][@as(usize, @intCast(part.pos.x))] = char;
+        grid.array[@as(usize, @intCast(part.pos.y))][@as(usize, @intCast(part.pos.x))] =
+            if (i == 0) self.char else utils.getChar(i);
     }
 }
 
-pub fn reset(self: *Snake, _: *Grid) !void {
+pub fn len(self: *Snake) usize {
+    return self.body.items.len;
+}
+
+pub fn reset(self: *Snake) void {
     self.body.shrinkAndFree(self.start_len);
     for (self.body.items, 0..) |*part, i| {
         part.facing = Snake.start_facing;

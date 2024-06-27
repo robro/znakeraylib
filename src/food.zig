@@ -7,8 +7,8 @@ const SizeError = @import("utils.zig").SizeError;
 char: u8,
 pos: Position,
 
-pub fn create(grid: *Grid) !Food {
-    return Food{ .char = 'f', .pos = try Food.getRandPos(grid) };
+pub fn create(char: u8, grid: *Grid) !Food {
+    return Food{ .char = char, .pos = try Food.getRandPos(grid) };
 }
 
 pub fn update(self: *Food) void {
@@ -19,7 +19,8 @@ pub fn draw(self: *Food, grid: *Grid) void {
     grid.array[@as(usize, @intCast(self.pos.y))][@as(usize, @intCast(self.pos.x))] = self.char;
 }
 
-pub fn reset(self: *Food, grid: *Grid) !void {
+pub fn reset(self: *Food, char: u8, grid: *Grid) !void {
+    self.char = char;
     self.pos = try Food.getRandPos(grid);
 }
 

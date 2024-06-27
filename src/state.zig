@@ -7,34 +7,11 @@ const Food = @import("food.zig");
 const rng = std.crypto.random;
 const Allocator = std.mem.Allocator;
 const Timer = std.time.Timer;
-
-const Object = union(enum) {
-    snake: *Snake,
-    food: *Food,
-
-    pub fn update(self: Object) void {
-        switch (self) {
-            inline else => |case| case.update(),
-        }
-    }
-
-    pub fn draw(self: Object, grid: *Grid) void {
-        switch (self) {
-            inline else => |case| case.draw(grid),
-        }
-    }
-
-    pub fn reset(self: Object, grid: *Grid) !void {
-        switch (self) {
-            inline else => |case| try case.reset(grid),
-        }
-    }
-};
+const utils = @import("utils.zig");
 
 grid: *Grid,
 snake: *Snake,
 food: *Food,
-objects: [2]Object,
 timer: Timer,
 rand_indices: []usize,
 start_fps: c_int,
@@ -57,7 +34,6 @@ pub fn create(grid: *Grid, snake: *Snake, food: *Food, start_fps: c_int, color_c
         .grid = grid,
         .snake = snake,
         .food = food,
-        .objects = [2]Object{ .{ .snake = snake }, .{ .food = food } },
         .timer = try Timer.start(),
         .rand_indices = rand_indices,
         .start_fps = start_fps,
@@ -79,7 +55,9 @@ pub fn update(self: *State) !void {
         try self.reset();
         return;
     }
-    for (self.objects) |obj| obj.update();
+    self.snake.update();
+    self.food.update();
+
     // Handle snake going OOB
     if (self.snake.head.pos.x < 0 or self.snake.head.pos.x >= self.grid.width or
         self.snake.head.pos.y < 0 or self.snake.head.pos.y >= self.grid.height)
@@ -96,8 +74,8 @@ pub fn update(self: *State) !void {
     }
     // Handle food eating
     if (std.meta.eql(self.snake.head.pos, self.food.pos)) {
-        try self.food.reset(self.grid);
         self.snake.grow();
+        try self.food.reset(utils.getChar(self.snake.len()), self.grid);
         self.score += 1;
         if (self.score % 5 == 0) {
             self.cur_fps = @min(self.cur_fps + 1, 60);
@@ -110,14 +88,15 @@ pub fn update(self: *State) !void {
 pub fn printHUD(self: *State, buffer: *const []u8) !void {
     _ = try std.fmt.bufPrintZ(
         buffer.*,
-        " score:{d:>3}  best:{d:>3}",
+        " zig:{d:>3}  ziggest:{d:>3}",
         .{ self.score, self.hiscore },
     );
 }
 
 pub fn printGrid(self: *State, buffer: *const []u8) !void {
     self.grid.clear();
-    for (self.objects) |obj| obj.draw(self.grid);
+    self.snake.draw(self.grid);
+    self.food.draw(self.grid);
     try self.grid.printToBuf(buffer);
 }
 
@@ -143,7 +122,8 @@ fn gameOver(self: *State) void {
 }
 
 fn reset(self: *State) !void {
-    for (self.objects) |obj| try obj.reset(self.grid);
+    self.snake.reset();
+    try self.food.reset(utils.getChar(self.snake.len()), self.grid);
     self.gameover = false;
     self.score = 0;
     self.nextRandIdx();
