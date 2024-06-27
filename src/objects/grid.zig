@@ -39,18 +39,6 @@ pub const Grid = struct {
         }
     }
 
-    pub fn getEmptyCount(self: *Grid) usize {
-        var empty_count: usize = 0;
-        for (self.array, 0..) |*row, y| {
-            for (row.*, 0..) |char, x| {
-                if (char != ' ') continue;
-                self.empty_ps[empty_count] = .{ .x = @intCast(x), .y = @intCast(y) };
-                empty_count += 1;
-            }
-        }
-        return empty_count;
-    }
-
     pub fn printToBuf(self: *Grid, buffer: *const []u8) !void {
         if (buffer.len < self.array[0].len * self.height) return error.BufferTooSmall;
         for (self.array, 0..) |row, i| {

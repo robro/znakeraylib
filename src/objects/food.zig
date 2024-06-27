@@ -28,7 +28,14 @@ pub const Food = struct {
     }
 
     fn getRandPos(grid: *Grid) !Vec2 {
-        const empty_count = grid.getEmptyCount();
+        var empty_count: usize = 0;
+        for (grid.array, 0..) |*row, y| {
+            for (row.*, 0..) |char, x| {
+                if (char != ' ') continue;
+                grid.empty_ps[empty_count] = .{ .x = @intCast(x), .y = @intCast(y) };
+                empty_count += 1;
+            }
+        }
         if (empty_count == 0) return error.NoFreePositions;
         return grid.empty_ps[rng.uintLessThan(usize, empty_count)];
     }

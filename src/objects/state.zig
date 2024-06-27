@@ -27,9 +27,7 @@ pub const State = struct {
     pub fn create(grid: *Grid, snake: *Snake, food: *Food, start_fps: c_int, color_count: usize, allocator: *const Allocator) !State {
         rl.SetTargetFPS(start_fps);
         var rand_indices = try allocator.alloc(usize, color_count);
-        for (rand_indices, 0..) |_, i| {
-            rand_indices[i] = i;
-        }
+        for (rand_indices, 0..) |_, i| rand_indices[i] = i;
         rng.shuffle(usize, rand_indices);
         return State{
             .grid = grid,
