@@ -14,15 +14,16 @@ pub fn main() !void {
     const win_width: c_int = (grid_width + 1) * @as(c_int, (@intFromFloat(font_size)));
     const win_height: c_int = (grid_height + 1) * @as(c_int, (@intFromFloat(font_size))) + hud_height;
     const margin: f32 = font_size / 2;
+    const fg_colors = [5]rl.Color{ rl.DARKBLUE, rl.DARKBROWN, rl.DARKGRAY, rl.DARKGREEN, rl.DARKPURPLE };
+    const bg_colors = [5]rl.Color{ rl.BLUE, rl.BROWN, rl.GRAY, rl.GREEN, rl.PURPLE };
+    const start_fps: c_int = 8;
 
     rl.SetConfigFlags(rl.FLAG_MSAA_4X_HINT | rl.FLAG_VSYNC_HINT);
     rl.InitWindow(win_width, win_height, "Znake");
     defer rl.CloseWindow();
 
-    const font = rl.LoadFontEx("resources/fonts/consola.ttf", font_size, null, 0);
     const font_color: rl.Color = rl.WHITE;
-    const bg_color: rl.Color = rl.DARKBROWN;
-    const grid_color: rl.Color = rl.BROWN;
+    const font = rl.LoadFontEx("resources/fonts/consola.ttf", font_size, null, 0);
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
@@ -41,9 +42,7 @@ pub fn main() !void {
     defer snake.free();
 
     var food = Food.create(&grid);
-    var state = try State.create(&grid, &snake, &food);
-
-    rl.SetTargetFPS(10);
+    var state = try State.create(&grid, &snake, &food, start_fps, fg_colors.len);
 
     while (!rl.WindowShouldClose()) {
         // Input --------------------------------------------------------------
@@ -54,13 +53,11 @@ pub fn main() !void {
 
         // Draw ---------------------------------------------------------------
         rl.BeginDrawing();
-        rl.ClearBackground(bg_color);
+        rl.ClearBackground(bg_colors[state.color_index]);
 
         try state.printHUD(&hud_buf);
-        rl.DrawTextEx(font, hud_buf, .{ .x = margin, .y = margin }, font_size, 0, font_color);
-
-        rl.DrawRectangle(0, hud_height, win_width, win_height, grid_color);
-
+        rl.DrawTextEx(font, hud_buf, .{ .x = margin, .y = margin + 8 }, font_size, 0, fg_colors[state.color_index]);
+        rl.DrawRectangle(0, hud_height, win_width, win_height, fg_colors[state.color_index]);
         try state.printGrid(&grid_buf);
         rl.DrawTextEx(font, grid_buf, .{ .x = margin, .y = hud_height + margin }, font_size, margin, font_color);
 

@@ -1,5 +1,6 @@
 const State = @This();
 const std = @import("std");
+const rl = @import("raylib.zig");
 const Grid = @import("grid.zig");
 const Snake = @import("snake.zig");
 const Food = @import("food.zig");
@@ -32,19 +33,28 @@ snake: *Snake,
 food: *Food,
 objects: [2]Object,
 timer: std.time.Timer,
+color_count: usize,
+color_index: usize,
+start_fps: c_int,
+cur_fps: c_int,
 score: u32 = 0,
 hiscore: u32 = 0,
 gameover: bool = false,
 
 const gameover_wait: u64 = 1_000; // ms
 
-pub fn create(grid: *Grid, snake: *Snake, food: *Food) !State {
+pub fn create(grid: *Grid, snake: *Snake, food: *Food, start_fps: c_int, color_count: usize) !State {
+    rl.SetTargetFPS(start_fps);
     return State{
         .grid = grid,
         .snake = snake,
         .food = food,
         .objects = [2]Object{ .{ .snake = snake }, .{ .food = food } },
         .timer = try std.time.Timer.start(),
+        .color_count = color_count,
+        .color_index = std.crypto.random.uintLessThan(usize, color_count),
+        .start_fps = start_fps,
+        .cur_fps = start_fps,
     };
 }
 
@@ -78,6 +88,10 @@ pub fn update(self: *State) void {
         self.food.reset(self.grid);
         self.snake.grow();
         self.score += 1;
+        if (self.score % 5 == 0) {
+            self.cur_fps = @min(self.cur_fps + 1, 60);
+            rl.SetTargetFPS(self.cur_fps);
+        }
         self.hiscore = @max(self.hiscore, self.score);
     }
 }
@@ -85,7 +99,7 @@ pub fn update(self: *State) void {
 pub fn printHUD(self: *State, buffer: *const []u8) !void {
     _ = try std.fmt.bufPrintZ(
         buffer.*,
-        "score: {d:<3} best: {d:<3}",
+        " score:{d:>3}  best:{d:>3}",
         .{ self.score, self.hiscore },
     );
 }
@@ -105,4 +119,7 @@ fn reset(self: *State) void {
     for (self.objects) |obj| obj.reset(self.grid);
     self.gameover = false;
     self.score = 0;
+    self.color_index = std.crypto.random.uintLessThan(usize, self.color_count);
+    self.cur_fps = self.start_fps;
+    rl.SetTargetFPS(self.cur_fps);
 }
