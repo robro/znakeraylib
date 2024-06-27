@@ -120,6 +120,8 @@ fn reset(self: *State) !void {
     self.gameover = false;
     self.score = 0;
     self.color_index = std.crypto.random.uintLessThan(usize, self.color_count);
-    self.cur_fps = self.start_fps;
-    rl.SetTargetFPS(self.cur_fps);
+    if (self.cur_fps != self.start_fps) {
+        rl.SetTargetFPS(self.start_fps);
+        self.cur_fps = self.start_fps;
+    }
 }
