@@ -4,6 +4,7 @@ const rl = @import("raylib.zig");
 const Grid = @import("grid.zig");
 const Snake = @import("snake.zig");
 const Food = @import("food.zig");
+const rng = std.crypto.random;
 
 const Object = union(enum) {
     snake: *Snake,
@@ -33,29 +34,44 @@ snake: *Snake,
 food: *Food,
 objects: [2]Object,
 timer: std.time.Timer,
-color_count: usize,
-color_index: usize,
+rand_indices: []usize,
 start_fps: c_int,
 cur_fps: c_int,
 score: u32 = 0,
 hiscore: u32 = 0,
+color_idx: usize = 0,
 gameover: bool = false,
 
 const gameover_wait: u64 = 1_000; // ms
 
-pub fn create(grid: *Grid, snake: *Snake, food: *Food, start_fps: c_int, color_count: usize) !State {
+pub fn create(
+    grid: *Grid,
+    snake: *Snake,
+    food: *Food,
+    start_fps: c_int,
+    color_count: usize,
+    allocator: *const std.mem.Allocator,
+) !State {
     rl.SetTargetFPS(start_fps);
+    var rand_indices = try allocator.alloc(usize, color_count);
+    for (rand_indices, 0..) |_, i| {
+        rand_indices[i] = i;
+    }
+    rng.shuffle(usize, rand_indices);
     return State{
         .grid = grid,
         .snake = snake,
         .food = food,
         .objects = [2]Object{ .{ .snake = snake }, .{ .food = food } },
         .timer = try std.time.Timer.start(),
-        .color_count = color_count,
-        .color_index = std.crypto.random.uintLessThan(usize, color_count),
+        .rand_indices = rand_indices,
         .start_fps = start_fps,
         .cur_fps = start_fps,
     };
+}
+
+pub fn free(self: *State, allocator: *const std.mem.Allocator) void {
+    allocator.free(self.rand_indices);
 }
 
 pub fn handleInput(self: *State, input: c_int) void {
@@ -110,6 +126,22 @@ pub fn printGrid(self: *State, buffer: *const []u8) !void {
     try self.grid.printToBuf(buffer);
 }
 
+pub fn randIdx(self: *State) usize {
+    return self.rand_indices[self.color_idx];
+}
+
+pub fn nextRandIdx(self: *State) void {
+    const prev_idx = self.randIdx();
+    self.color_idx += 1;
+    if (self.color_idx == self.rand_indices.len) {
+        self.color_idx = 0;
+        rng.shuffle(usize, self.rand_indices);
+        if (self.rand_indices[0] == prev_idx) {
+            std.mem.swap(usize, &self.rand_indices[0], &self.rand_indices[1]);
+        }
+    }
+}
+
 fn gameOver(self: *State) void {
     self.gameover = true;
     self.timer.reset();
@@ -119,7 +151,7 @@ fn reset(self: *State) !void {
     for (self.objects) |obj| try obj.reset(self.grid);
     self.gameover = false;
     self.score = 0;
-    self.color_index = std.crypto.random.uintLessThan(usize, self.color_count);
+    self.nextRandIdx();
     if (self.cur_fps != self.start_fps) {
         rl.SetTargetFPS(self.start_fps);
         self.cur_fps = self.start_fps;

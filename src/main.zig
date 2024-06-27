@@ -30,8 +30,8 @@ pub fn main() !void {
     defer _ = gpa.deinit();
 
     var grid = try Grid.create(grid_width, grid_height, &allocator);
-    grid.clear();
     defer grid.free(&allocator);
+    grid.clear();
 
     const grid_buf = try allocator.allocSentinel(u8, (grid_width + 1) * grid_height, 0);
     defer allocator.free(grid_buf);
@@ -41,9 +41,12 @@ pub fn main() !void {
 
     var snake = try Snake.create('Z', 4, .{ .x = 4, .y = 2 }, &allocator);
     defer snake.free();
+    snake.draw(&grid); // Prevent food from spawning on top of snake
 
+    for (grid.array) |row| std.debug.print("{s}\n", .{row});
     var food = try Food.create(&grid);
-    var state = try State.create(&grid, &snake, &food, start_fps, fg_colors.len);
+    var state = try State.create(&grid, &snake, &food, start_fps, fg_colors.len, &allocator);
+    defer state.free(&allocator);
 
     while (!rl.WindowShouldClose()) {
         // Input --------------------------------------------------------------
@@ -54,11 +57,11 @@ pub fn main() !void {
 
         // Draw ---------------------------------------------------------------
         rl.BeginDrawing();
-        rl.ClearBackground(bg_colors[state.color_index]);
+        rl.ClearBackground(bg_colors[state.randIdx()]);
 
         try state.printHUD(&hud_buf);
-        rl.DrawTextEx(font, hud_buf, .{ .x = margin, .y = margin + 8 }, font_size, 0, fg_colors[state.color_index]);
-        rl.DrawRectangle(0, hud_height, win_width, win_height, fg_colors[state.color_index]);
+        rl.DrawTextEx(font, hud_buf, .{ .x = margin, .y = margin + 8 }, font_size, 0, fg_colors[state.randIdx()]);
+        rl.DrawRectangle(0, hud_height, win_width, win_height, fg_colors[state.randIdx()]);
         try state.printGrid(&grid_buf);
         rl.DrawTextEx(font, grid_buf, .{ .x = margin, .y = hud_height + margin }, font_size, margin, font_color);
 
