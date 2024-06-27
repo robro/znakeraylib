@@ -1,10 +1,16 @@
 const std = @import("std");
 const rl = @import("raylib.zig");
-const Grid = @import("grid.zig");
-const Snake = @import("snake.zig");
-const Food = @import("food.zig");
-const State = @import("state.zig");
-const utils = @import("utils.zig");
+const objects = @import("objects/objects.zig");
+const math = @import("math.zig");
+const misc = @import("misc.zig");
+const enums = @import("enums.zig");
+
+const Grid = objects.grid.Grid;
+const Snake = objects.snake.Snake;
+const Food = objects.food.Food;
+const State = objects.state.State;
+const Direction = enums.Direction;
+const Vec2 = math.Vec2;
 
 pub fn main() !void {
     // Init -------------------------------------------------------------------
@@ -20,7 +26,8 @@ pub fn main() !void {
     const start_fps: c_int = 8;
     const head_char: u8 = 'Z';
     const start_len: usize = 3;
-    const start_pos = .{ .x = 4, .y = 2 };
+    const start_pos = Vec2{ .x = grid_width - 4, .y = 5 };
+    const start_facing = Direction.LEFT;
 
     rl.SetConfigFlags(rl.FLAG_MSAA_4X_HINT | rl.FLAG_VSYNC_HINT);
     rl.InitWindow(win_width, win_height, "Znake");
@@ -43,11 +50,11 @@ pub fn main() !void {
     const hud_buf = try allocator.allocSentinel(u8, 30, 0);
     defer allocator.free(hud_buf);
 
-    var snake = try Snake.create(head_char, start_len, start_pos, &allocator);
+    var snake = try Snake.create(head_char, start_len, start_pos, start_facing, &allocator);
     defer snake.free();
     snake.draw(&grid); // Prevent food from spawning on top of snake
 
-    var food = try Food.create(utils.getChar(snake.len()), &grid);
+    var food = try Food.create(misc.getChar(snake.len()), &grid);
     var state = try State.create(&grid, &snake, &food, start_fps, fg_colors.len, &allocator);
     defer state.free(&allocator);
 
