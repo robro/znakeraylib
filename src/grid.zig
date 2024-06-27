@@ -2,8 +2,7 @@ const Grid = @This();
 const std = @import("std");
 const Position = @import("utils.zig").Position;
 const Allocator = std.mem.Allocator;
-
-const SizeError = error{BufferTooSmall};
+const SizeError = @import("utils.zig").SizeError;
 
 width: usize,
 height: usize,
