@@ -2,9 +2,9 @@ const Snake = @This();
 const std = @import("std");
 const rl = @import("raylib.zig");
 const Grid = @import("grid.zig");
-const types = @import("types.zig");
-const Direction = types.Direction;
-const Position = types.Position;
+const utils = @import("utils.zig");
+const Direction = utils.Direction;
+const Position = utils.Position;
 
 const Part = struct {
     facing: Direction,
@@ -96,7 +96,7 @@ pub fn draw(self: *Snake, grid: *Grid) void {
     }
 }
 
-pub fn reset(self: *Snake, _: *Grid) void {
+pub fn reset(self: *Snake, _: *Grid) !void {
     self.body.shrinkAndFree(self.start_len);
     for (self.body.items, 0..) |*part, i| {
         part.facing = Snake.start_facing;

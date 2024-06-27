@@ -1,3 +1,8 @@
+pub const SizeError = error{
+    BufferTooSmall,
+    NoFreePositions,
+};
+
 pub const Direction = enum {
     UP,
     DOWN,

@@ -29,7 +29,8 @@ pub fn main() !void {
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
 
-    var grid = try Grid.create(' ', grid_width, grid_height, &allocator);
+    var grid = try Grid.create(grid_width, grid_height, &allocator);
+    grid.empty();
     defer grid.free(&allocator);
 
     const grid_buf = try allocator.allocSentinel(u8, (grid_width + 1) * grid_height, 0);
@@ -41,7 +42,7 @@ pub fn main() !void {
     var snake = try Snake.create('S', 4, .{ .x = 4, .y = 2 }, &allocator);
     defer snake.free();
 
-    var food = Food.create(&grid);
+    var food = try Food.create(&grid);
     var state = try State.create(&grid, &snake, &food, start_fps, fg_colors.len);
 
     while (!rl.WindowShouldClose()) {
@@ -49,7 +50,7 @@ pub fn main() !void {
         state.handleInput(rl.GetKeyPressed());
 
         // Update -------------------------------------------------------------
-        state.update();
+        try state.update();
 
         // Draw ---------------------------------------------------------------
         rl.BeginDrawing();

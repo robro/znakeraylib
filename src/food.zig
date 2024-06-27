@@ -2,13 +2,14 @@ const Food = @This();
 const std = @import("std");
 const rng = std.crypto.random;
 const Grid = @import("grid.zig");
-const Position = @import("types.zig").Position;
+const Position = @import("utils.zig").Position;
+const SizeError = @import("utils.zig").SizeError;
 
 char: u8,
 pos: Position,
 
-pub fn create(grid: *Grid) Food {
-    return Food{ .char = 'f', .pos = Food.getRandPos(grid) };
+pub fn create(grid: *Grid) !Food {
+    return Food{ .char = 'f', .pos = try Food.getRandPos(grid) };
 }
 
 pub fn update(self: *Food) void {
@@ -19,13 +20,12 @@ pub fn draw(self: *Food, grid: *Grid) void {
     grid.array[@as(usize, @intCast(self.pos.y))][@as(usize, @intCast(self.pos.x))] = self.char;
 }
 
-pub fn reset(self: *Food, grid: *Grid) void {
-    self.pos = Food.getRandPos(grid);
+pub fn reset(self: *Food, grid: *Grid) !void {
+    self.pos = try Food.getRandPos(grid);
 }
 
-fn getRandPos(grid: *Grid) Position {
-    return Position{
-        .x = rng.intRangeLessThan(i32, 0, @as(i32, @intCast(grid.width))),
-        .y = rng.intRangeLessThan(i32, 0, @as(i32, @intCast(grid.height))),
-    };
+fn getRandPos(grid: *Grid) !Position {
+    const empty_count = grid.getEmptyCount();
+    if (empty_count == 0) return SizeError.NoFreePositions;
+    return grid.empty_ps[rng.uintLessThan(usize, empty_count)];
 }

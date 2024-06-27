@@ -21,9 +21,9 @@ const Object = union(enum) {
         }
     }
 
-    pub fn reset(self: Object, grid: *Grid) void {
+    pub fn reset(self: Object, grid: *Grid) !void {
         switch (self) {
-            inline else => |case| case.reset(grid),
+            inline else => |case| try case.reset(grid),
         }
     }
 };
@@ -62,10 +62,10 @@ pub fn handleInput(self: *State, input: c_int) void {
     self.snake.handleInput(input);
 }
 
-pub fn update(self: *State) void {
+pub fn update(self: *State) !void {
     if (self.gameover) {
         if (self.timer.read() < State.gameover_wait * std.time.ns_per_ms) return;
-        self.reset();
+        try self.reset();
         return;
     }
     for (self.objects) |obj| obj.update();
@@ -85,7 +85,7 @@ pub fn update(self: *State) void {
     }
     // Handle food eating
     if (std.meta.eql(self.snake.head.pos, self.food.pos)) {
-        self.food.reset(self.grid);
+        try self.food.reset(self.grid);
         self.snake.grow();
         self.score += 1;
         if (self.score % 5 == 0) {
@@ -115,8 +115,8 @@ fn gameOver(self: *State) void {
     self.timer.reset();
 }
 
-fn reset(self: *State) void {
-    for (self.objects) |obj| obj.reset(self.grid);
+fn reset(self: *State) !void {
+    for (self.objects) |obj| try obj.reset(self.grid);
     self.gameover = false;
     self.score = 0;
     self.color_index = std.crypto.random.uintLessThan(usize, self.color_count);
