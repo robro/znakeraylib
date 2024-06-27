@@ -6,11 +6,17 @@ const types = @import("types.zig");
 const Direction = types.Direction;
 const Position = types.Position;
 
+const Part = struct {
+    facing: Direction,
+    pos: Position,
+};
+
 char: u8,
 start_len: usize,
 start_pos: Position,
-body: std.ArrayList(Position),
-head: Position,
+body: std.ArrayList(Part),
+head: Part,
+tail: Part,
 facing: Direction,
 
 const start_facing: Direction = .RIGHT;
@@ -21,11 +27,12 @@ pub fn create(
     start_pos: Position,
     allocator: *const std.mem.Allocator,
 ) !Snake {
-    var body = std.ArrayList(Position).init(allocator.*);
+    var body = std.ArrayList(Part).init(allocator.*);
     try body.resize(start_len);
     for (body.items, 0..) |*part, i| {
-        part.x = start_pos.x - @as(i32, @intCast(i));
-        part.y = start_pos.y;
+        part.facing = start_facing;
+        part.pos.x = start_pos.x - @as(i32, @intCast(i));
+        part.pos.y = start_pos.y;
     }
     return Snake{
         .char = char,
@@ -33,6 +40,7 @@ pub fn create(
         .start_pos = start_pos,
         .body = body,
         .head = body.items[0],
+        .tail = body.items[body.items.len - 1],
         .facing = Snake.start_facing,
     };
 }
@@ -42,7 +50,7 @@ pub fn free(self: *Snake) void {
 }
 
 pub fn grow(self: *Snake) void {
-    self.body.append(.{ .x = -1, .y = -1 }) catch unreachable;
+    self.body.append(self.tail) catch unreachable;
 }
 
 pub fn handleInput(self: *Snake, input: c_int) void {
@@ -56,31 +64,44 @@ pub fn handleInput(self: *Snake, input: c_int) void {
 }
 
 pub fn update(self: *Snake) void {
-    var new_x = self.head.x;
-    var new_y = self.head.y;
+    var new_x = self.head.pos.x;
+    var new_y = self.head.pos.y;
+
     switch (self.facing) {
         .UP => new_y -= 1,
         .DOWN => new_y += 1,
         .LEFT => new_x -= 1,
         .RIGHT => new_x += 1,
     }
-    self.body.insert(0, .{ .x = new_x, .y = new_y }) catch unreachable;
+    self.body.insert(0, .{ .facing = self.facing, .pos = .{ .x = new_x, .y = new_y } }) catch unreachable;
     self.head = self.body.items[0];
-    _ = self.body.pop();
+    self.tail = self.body.pop();
 }
 
 pub fn draw(self: *Snake, grid: *Grid) void {
-    for (self.body.items) |part| {
-        if (part.x < 0 or part.x >= grid.width or part.y < 0 or part.y >= grid.height) continue;
-        grid.array[@as(usize, @intCast(part.y))][@as(usize, @intCast(part.x))] = self.char;
+    for (self.body.items, 0..) |part, i| {
+        if (part.pos.x < 0 or part.pos.x >= grid.width or part.pos.y < 0 or part.pos.y >= grid.height) continue;
+        var char: u8 = '0';
+        if (i == 0) {
+            char = self.char;
+        } else if (i == self.body.items.len - 1) {
+            switch (part.facing) {
+                .UP => char = 'v',
+                .DOWN => char = '^',
+                .LEFT => char = '>',
+                .RIGHT => char = '<',
+            }
+        }
+        grid.array[@as(usize, @intCast(part.pos.y))][@as(usize, @intCast(part.pos.x))] = char;
     }
 }
 
 pub fn reset(self: *Snake, _: *Grid) void {
     self.body.shrinkAndFree(self.start_len);
     for (self.body.items, 0..) |*part, i| {
-        part.x = self.start_pos.x - @as(i32, @intCast(i));
-        part.y = self.start_pos.y;
+        part.facing = Snake.start_facing;
+        part.pos.x = self.start_pos.x - @as(i32, @intCast(i));
+        part.pos.y = self.start_pos.y;
     }
     self.head = self.body.items[0];
     self.facing = Snake.start_facing;

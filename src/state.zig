@@ -70,8 +70,8 @@ pub fn update(self: *State) void {
     }
     for (self.objects) |obj| obj.update();
     // Handle snake going OOB
-    if (self.snake.head.x < 0 or self.snake.head.x >= self.grid.width or
-        self.snake.head.y < 0 or self.snake.head.y >= self.grid.height)
+    if (self.snake.head.pos.x < 0 or self.snake.head.pos.x >= self.grid.width or
+        self.snake.head.pos.y < 0 or self.snake.head.pos.y >= self.grid.height)
     {
         self.gameOver();
         return;
@@ -84,7 +84,7 @@ pub fn update(self: *State) void {
         }
     }
     // Handle food eating
-    if (std.meta.eql(self.snake.head, self.food.pos)) {
+    if (std.meta.eql(self.snake.head.pos, self.food.pos)) {
         self.food.reset(self.grid);
         self.snake.grow();
         self.score += 1;
