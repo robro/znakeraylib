@@ -30,7 +30,7 @@ pub fn main() !void {
     defer _ = gpa.deinit();
 
     var grid = try Grid.create(grid_width, grid_height, &allocator);
-    grid.empty();
+    grid.clear();
     defer grid.free(&allocator);
 
     const grid_buf = try allocator.allocSentinel(u8, (grid_width + 1) * grid_height, 0);

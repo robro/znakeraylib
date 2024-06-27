@@ -30,7 +30,7 @@ pub fn free(self: *Grid, allocator: *const std.mem.Allocator) void {
     allocator.free(self.empty_ps);
 }
 
-pub fn empty(self: *Grid) void {
+pub fn clear(self: *Grid) void {
     for (self.array) |*row| {
         for (row.*) |*item| {
             item.* = ' ';

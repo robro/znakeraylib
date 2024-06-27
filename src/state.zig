@@ -105,7 +105,7 @@ pub fn printHUD(self: *State, buffer: *const []u8) !void {
 }
 
 pub fn printGrid(self: *State, buffer: *const []u8) !void {
-    self.grid.empty();
+    self.grid.clear();
     for (self.objects) |obj| obj.draw(self.grid);
     try self.grid.printToBuf(buffer);
 }
