@@ -5,6 +5,8 @@ const Grid = @import("grid.zig");
 const Snake = @import("snake.zig");
 const Food = @import("food.zig");
 const rng = std.crypto.random;
+const Allocator = std.mem.Allocator;
+const Timer = std.time.Timer;
 
 const Object = union(enum) {
     snake: *Snake,
@@ -33,7 +35,7 @@ grid: *Grid,
 snake: *Snake,
 food: *Food,
 objects: [2]Object,
-timer: std.time.Timer,
+timer: Timer,
 rand_indices: []usize,
 start_fps: c_int,
 cur_fps: c_int,
@@ -44,14 +46,7 @@ gameover: bool = false,
 
 const gameover_wait: u64 = 1_000; // ms
 
-pub fn create(
-    grid: *Grid,
-    snake: *Snake,
-    food: *Food,
-    start_fps: c_int,
-    color_count: usize,
-    allocator: *const std.mem.Allocator,
-) !State {
+pub fn create(grid: *Grid, snake: *Snake, food: *Food, start_fps: c_int, color_count: usize, allocator: *const Allocator) !State {
     rl.SetTargetFPS(start_fps);
     var rand_indices = try allocator.alloc(usize, color_count);
     for (rand_indices, 0..) |_, i| {
@@ -63,14 +58,14 @@ pub fn create(
         .snake = snake,
         .food = food,
         .objects = [2]Object{ .{ .snake = snake }, .{ .food = food } },
-        .timer = try std.time.Timer.start(),
+        .timer = try Timer.start(),
         .rand_indices = rand_indices,
         .start_fps = start_fps,
         .cur_fps = start_fps,
     };
 }
 
-pub fn free(self: *State, allocator: *const std.mem.Allocator) void {
+pub fn free(self: *State, allocator: *const Allocator) void {
     allocator.free(self.rand_indices);
 }
 

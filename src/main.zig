@@ -43,7 +43,6 @@ pub fn main() !void {
     defer snake.free();
     snake.draw(&grid); // Prevent food from spawning on top of snake
 
-    for (grid.array) |row| std.debug.print("{s}\n", .{row});
     var food = try Food.create(&grid);
     var state = try State.create(&grid, &snake, &food, start_fps, fg_colors.len, &allocator);
     defer state.free(&allocator);

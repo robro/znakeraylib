@@ -5,6 +5,8 @@ const Grid = @import("grid.zig");
 const utils = @import("utils.zig");
 const Direction = utils.Direction;
 const Position = utils.Position;
+const Allocator = std.mem.Allocator;
+const ArrayList = std.ArrayList;
 
 const Part = struct {
     facing: Direction,
@@ -14,19 +16,14 @@ const Part = struct {
 char: u8,
 start_len: usize,
 start_pos: Position,
-body: std.ArrayList(Part),
+body: ArrayList(Part),
 head: Part,
 tail: Part,
 facing: Direction,
 
 const start_facing: Direction = .RIGHT;
 
-pub fn create(
-    char: u8,
-    start_len: usize,
-    start_pos: Position,
-    allocator: *const std.mem.Allocator,
-) !Snake {
+pub fn create(char: u8, start_len: usize, start_pos: Position, allocator: *const Allocator) !Snake {
     var body = std.ArrayList(Part).init(allocator.*);
     try body.resize(start_len);
     for (body.items, 0..) |*part, i| {

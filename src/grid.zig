@@ -1,6 +1,7 @@
 const Grid = @This();
 const std = @import("std");
 const Position = @import("utils.zig").Position;
+const Allocator = std.mem.Allocator;
 
 const SizeError = error{BufferTooSmall};
 
@@ -9,7 +10,7 @@ height: usize,
 array: [][]u8,
 empty_ps: []Position,
 
-pub fn create(width: usize, height: usize, allocator: *const std.mem.Allocator) !Grid {
+pub fn create(width: usize, height: usize, allocator: *const Allocator) !Grid {
     const array = try allocator.alloc([]u8, height);
     for (array) |*row| {
         row.* = try allocator.alloc(u8, width);
@@ -22,7 +23,7 @@ pub fn create(width: usize, height: usize, allocator: *const std.mem.Allocator) 
     };
 }
 
-pub fn free(self: *Grid, allocator: *const std.mem.Allocator) void {
+pub fn free(self: *Grid, allocator: *const Allocator) void {
     for (self.array) |*row| {
         allocator.free(row.*);
     }

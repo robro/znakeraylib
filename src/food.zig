@@ -1,7 +1,6 @@
 const Food = @This();
-const std = @import("std");
-const rng = std.crypto.random;
 const Grid = @import("grid.zig");
+const rng = @import("std").crypto.random;
 const Position = @import("utils.zig").Position;
 const SizeError = @import("utils.zig").SizeError;
 
