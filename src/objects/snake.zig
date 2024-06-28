@@ -73,7 +73,7 @@ pub const Snake = struct {
 
     pub fn draw(self: *Snake, grid: *Grid) void {
         var char: u8 = undefined;
-        for (self.body.items, 0..) |part, i| {
+        for (self.body.items, 0..) |*part, i| {
             if (part.pos.x < 0 or part.pos.x >= grid.width or part.pos.y < 0 or part.pos.y >= grid.height) continue;
             char = misc.getChar(i);
             if (i == 0) char = std.ascii.toUpper(char);
