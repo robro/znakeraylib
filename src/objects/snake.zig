@@ -8,17 +8,17 @@ const objects = @import("objects.zig");
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
 const Direction = enums.Direction;
-const Vec2 = math.Vec2;
+const Position = math.Position;
 const Grid = objects.grid.Grid;
 
 const Part = struct {
     facing: Direction,
-    pos: Vec2,
+    pos: Position,
 };
 
 pub const Snake = struct {
     start_len: usize,
-    start_pos: Vec2,
+    start_pos: Position,
     start_facing: Direction,
     facing: Direction,
     body: ArrayList(Part),
@@ -80,7 +80,7 @@ pub const Snake = struct {
     }
 };
 
-pub fn spawnSnake(length: usize, position: Vec2, facing: Direction, allocator: *const Allocator) !Snake {
+pub fn spawnSnake(length: usize, position: Position, facing: Direction, allocator: *const Allocator) !Snake {
     var body = ArrayList(Part).init(allocator.*);
     try body.resize(length);
     initBody(&body, position, facing);
@@ -95,7 +95,7 @@ pub fn spawnSnake(length: usize, position: Vec2, facing: Direction, allocator: *
     };
 }
 
-fn initBody(body: *ArrayList(Part), pos: Vec2, facing: Direction) void {
+fn initBody(body: *ArrayList(Part), pos: Position, facing: Direction) void {
     var offset: i32 = undefined;
     for (body.items, 0..) |*part, i| {
         offset = @intCast(i);

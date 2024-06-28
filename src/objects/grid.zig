@@ -2,13 +2,13 @@ const std = @import("std");
 const math = @import("../math.zig");
 
 const Allocator = std.mem.Allocator;
-const Vec2 = math.Vec2;
+const Position = math.Position;
 
 pub const Grid = struct {
     width: usize,
     height: usize,
     array: [][]u8,
-    empty_ps: []Vec2,
+    empty_ps: []Position,
 
     pub fn printToBuf(self: *Grid, buffer: *const []u8) !void {
         if (buffer.len < self.array[0].len * self.height) return error.BufferTooSmall;
@@ -41,7 +41,7 @@ pub fn spawnGrid(width: usize, height: usize, allocator: *const Allocator) !Grid
         .width = width,
         .height = height,
         .array = array,
-        .empty_ps = try allocator.alloc(Vec2, width * height),
+        .empty_ps = try allocator.alloc(Position, width * height),
     };
 }
 

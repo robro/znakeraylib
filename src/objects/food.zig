@@ -3,12 +3,12 @@ const objects = @import("objects.zig");
 const math = @import("../math.zig");
 
 const Grid = objects.grid.Grid;
-const Vec2 = math.Vec2;
+const Position = math.Position;
 const rng = std.crypto.random;
 
 pub const Food = struct {
     char: u8,
-    pos: Vec2,
+    pos: Position,
 
     pub fn draw(self: *Food, grid: *Grid) void {
         grid.array[@as(usize, @intCast(self.pos.y))][@as(usize, @intCast(self.pos.x))] = self.char;

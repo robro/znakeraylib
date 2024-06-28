@@ -10,7 +10,7 @@ const Snake = objects.snake.Snake;
 const Food = objects.food.Food;
 const State = objects.state.State;
 const Direction = enums.Direction;
-const Vec2 = math.Vec2;
+const Position = math.Position;
 
 pub fn main() !void {
     // Init -------------------------------------------------------------------
@@ -25,7 +25,7 @@ pub fn main() !void {
     const bg_colors = [5]rl.Color{ rl.BLUE, rl.BROWN, rl.GRAY, rl.GREEN, rl.PURPLE };
     const start_fps: c_int = 8;
     const start_len: usize = 3;
-    const start_pos = Vec2{ .x = grid_width - 4, .y = 5 };
+    const start_pos = Position{ .x = grid_width - 4, .y = 5 };
     const start_facing = Direction.LEFT;
 
     rl.SetConfigFlags(rl.FLAG_MSAA_4X_HINT | rl.FLAG_VSYNC_HINT);
