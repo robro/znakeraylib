@@ -24,7 +24,6 @@ pub fn main() !void {
     const fg_colors = [5]rl.Color{ rl.DARKBLUE, rl.DARKBROWN, rl.DARKGRAY, rl.DARKGREEN, rl.DARKPURPLE };
     const bg_colors = [5]rl.Color{ rl.BLUE, rl.BROWN, rl.GRAY, rl.GREEN, rl.PURPLE };
     const start_fps: c_int = 8;
-    const head_char: u8 = 'Z';
     const start_len: usize = 3;
     const start_pos = Vec2{ .x = grid_width - 4, .y = 5 };
     const start_facing = Direction.LEFT;
@@ -50,7 +49,7 @@ pub fn main() !void {
     const hud_buf = try allocator.allocSentinel(u8, 30, 0);
     defer allocator.free(hud_buf);
 
-    var snake = try Snake.create(head_char, start_len, start_pos, start_facing, &allocator);
+    var snake = try Snake.create(start_len, start_pos, start_facing, &allocator);
     defer snake.free();
     snake.draw(&grid); // Prevent food from spawning on top of snake
 

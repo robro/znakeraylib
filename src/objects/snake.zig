@@ -17,28 +17,26 @@ const Part = struct {
 };
 
 pub const Snake = struct {
-    char: u8,
     start_len: usize,
     start_pos: Vec2,
     start_facing: Direction,
     facing: Direction,
     body: ArrayList(Part),
     head: Part,
-    tail: Part,
+    tail: ?Part,
 
-    pub fn create(char: u8, start_len: usize, start_pos: Vec2, start_facing: Direction, allocator: *const Allocator) !Snake {
+    pub fn create(start_len: usize, start_pos: Vec2, start_facing: Direction, allocator: *const Allocator) !Snake {
         var body = ArrayList(Part).init(allocator.*);
         try body.resize(start_len);
         initBody(&body, start_pos, start_facing);
         return Snake{
-            .char = char,
             .start_len = start_len,
             .start_pos = start_pos,
             .start_facing = start_facing,
             .facing = start_facing,
             .body = body,
             .head = body.items[0],
-            .tail = body.items[body.items.len - 1],
+            .tail = null,
         };
     }
 
@@ -47,7 +45,7 @@ pub const Snake = struct {
     }
 
     pub fn grow(self: *Snake) void {
-        self.body.append(self.tail) catch unreachable;
+        self.body.append(self.tail.?) catch unreachable;
     }
 
     pub fn handleInput(self: *Snake, input: c_int) void {
@@ -74,10 +72,12 @@ pub const Snake = struct {
     }
 
     pub fn draw(self: *Snake, grid: *Grid) void {
+        var char: u8 = undefined;
         for (self.body.items, 0..) |part, i| {
             if (part.pos.x < 0 or part.pos.x >= grid.width or part.pos.y < 0 or part.pos.y >= grid.height) continue;
-            grid.array[@as(usize, @intCast(part.pos.y))][@as(usize, @intCast(part.pos.x))] =
-                if (i == 0) self.char else misc.getChar(i);
+            char = misc.getChar(i);
+            if (i == 0) char = std.ascii.toUpper(char);
+            grid.array[@as(usize, @intCast(part.pos.y))][@as(usize, @intCast(part.pos.x))] = char;
         }
     }
 
@@ -88,23 +88,23 @@ pub const Snake = struct {
     pub fn reset(self: *Snake) !void {
         try self.body.resize(self.start_len);
         initBody(&self.body, self.start_pos, self.start_facing);
-        self.head = self.body.items[0];
-        self.tail = self.body.items[self.body.items.len - 1];
         self.facing = self.start_facing;
-    }
-
-    fn initBody(body: *ArrayList(Part), pos: Vec2, facing: Direction) void {
-        var offset: i32 = undefined;
-        for (body.items, 0..) |*part, i| {
-            offset = @intCast(i);
-            part.facing = facing;
-            part.pos = pos;
-            switch (facing) {
-                .UP => part.pos.y += offset,
-                .DOWN => part.pos.y -= offset,
-                .LEFT => part.pos.x += offset,
-                .RIGHT => part.pos.x -= offset,
-            }
-        }
+        self.head = self.body.items[0];
+        self.tail = null;
     }
 };
+
+fn initBody(body: *ArrayList(Part), pos: Vec2, facing: Direction) void {
+    var offset: i32 = undefined;
+    for (body.items, 0..) |*part, i| {
+        offset = @intCast(i);
+        part.facing = facing;
+        part.pos = pos;
+        switch (facing) {
+            .UP => part.pos.y += offset,
+            .DOWN => part.pos.y -= offset,
+            .LEFT => part.pos.x += offset,
+            .RIGHT => part.pos.x -= offset,
+        }
+    }
+}
