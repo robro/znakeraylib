@@ -39,22 +39,20 @@ pub fn main() !void {
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
 
-    var grid = try Grid.create(grid_width, grid_height, &allocator);
-    defer grid.free(&allocator);
-    grid.clear();
-
     const grid_buf = try allocator.allocSentinel(u8, (grid_width + 1) * grid_height, 0);
     defer allocator.free(grid_buf);
 
     const hud_buf = try allocator.allocSentinel(u8, 30, 0);
     defer allocator.free(hud_buf);
 
-    var snake = try Snake.create(start_len, start_pos, start_facing, &allocator);
+    var grid = try objects.grid.spawnGrid(grid_width, grid_height, &allocator);
+    defer grid.free(&allocator);
+
+    var snake = try objects.snake.spawnSnake(start_len, start_pos, start_facing, &allocator);
     defer snake.free();
     snake.draw(&grid); // Prevent food from spawning on top of snake
 
-    var food = try Food.create(misc.getChar(snake.len()), &grid);
-    var state = try State.create(&grid, &snake, &food, start_fps, fg_colors.len, &allocator);
+    var state = try objects.state.spawnState(&grid, &snake, start_fps, fg_colors.len, &allocator);
     defer state.free(&allocator);
 
     while (!rl.WindowShouldClose()) {

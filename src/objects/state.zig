@@ -13,7 +13,7 @@ const Food = objects.food.Food;
 pub const State = struct {
     grid: *Grid,
     snake: *Snake,
-    food: *Food,
+    food: Food,
     timer: Timer,
     rand_indices: []usize,
     start_fps: c_int,
@@ -23,26 +23,6 @@ pub const State = struct {
     color_idx: usize = 0,
     gameover: bool = false,
     gameover_wait: u64 = 1_000, // ms
-
-    pub fn create(grid: *Grid, snake: *Snake, food: *Food, start_fps: c_int, color_count: usize, allocator: *const Allocator) !State {
-        rl.SetTargetFPS(start_fps);
-        var rand_indices = try allocator.alloc(usize, color_count);
-        for (rand_indices, 0..) |_, i| rand_indices[i] = i;
-        rng.shuffle(usize, rand_indices);
-        return State{
-            .grid = grid,
-            .snake = snake,
-            .food = food,
-            .timer = try Timer.start(),
-            .rand_indices = rand_indices,
-            .start_fps = start_fps,
-            .cur_fps = start_fps,
-        };
-    }
-
-    pub fn free(self: *State, allocator: *const Allocator) void {
-        allocator.free(self.rand_indices);
-    }
 
     pub fn handleInput(self: *State, input: c_int) void {
         self.snake.handleInput(input);
@@ -55,7 +35,6 @@ pub const State = struct {
             return;
         }
         self.snake.update();
-        self.food.update();
 
         // Handle snake going OOB
         if (self.snake.head.pos.x < 0 or self.snake.head.pos.x >= self.grid.width or
@@ -74,7 +53,7 @@ pub const State = struct {
         // Handle food eating
         if (std.meta.eql(self.snake.head.pos, self.food.pos)) {
             self.snake.grow();
-            try self.food.reset(misc.getChar(self.snake.len()), self.grid);
+            self.food = try objects.food.spawnFood(misc.getChar(self.snake.len()), self.grid);
             self.score += 1;
             if (self.score % 5 == 0) {
                 self.cur_fps = @min(self.cur_fps + 1, 60);
@@ -116,14 +95,9 @@ pub const State = struct {
         }
     }
 
-    fn gameOver(self: *State) void {
-        self.gameover = true;
-        self.timer.reset();
-    }
-
-    fn reset(self: *State) !void {
+    pub fn reset(self: *State) !void {
         try self.snake.reset();
-        try self.food.reset(misc.getChar(self.snake.len()), self.grid);
+        self.food = try objects.food.spawnFood(misc.getChar(self.snake.len()), self.grid);
         self.gameover = false;
         self.score = 0;
         self.nextRandIdx();
@@ -132,4 +106,29 @@ pub const State = struct {
             self.cur_fps = self.start_fps;
         }
     }
+
+    pub fn free(self: *State, allocator: *const Allocator) void {
+        allocator.free(self.rand_indices);
+    }
+
+    fn gameOver(self: *State) void {
+        self.gameover = true;
+        self.timer.reset();
+    }
 };
+
+pub fn spawnState(grid: *Grid, snake: *Snake, start_fps: c_int, color_count: usize, allocator: *const Allocator) !State {
+    rl.SetTargetFPS(start_fps);
+    var rand_indices = try allocator.alloc(usize, color_count);
+    for (rand_indices, 0..) |_, i| rand_indices[i] = i;
+    rng.shuffle(usize, rand_indices);
+    return State{
+        .grid = grid,
+        .snake = snake,
+        .food = try objects.food.spawnFood(misc.getChar(snake.len()), grid),
+        .timer = try Timer.start(),
+        .rand_indices = rand_indices,
+        .start_fps = start_fps,
+        .cur_fps = start_fps,
+    };
+}

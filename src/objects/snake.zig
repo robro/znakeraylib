@@ -25,29 +25,6 @@ pub const Snake = struct {
     head: Part,
     tail: ?Part,
 
-    pub fn create(start_len: usize, start_pos: Vec2, start_facing: Direction, allocator: *const Allocator) !Snake {
-        var body = ArrayList(Part).init(allocator.*);
-        try body.resize(start_len);
-        initBody(&body, start_pos, start_facing);
-        return Snake{
-            .start_len = start_len,
-            .start_pos = start_pos,
-            .start_facing = start_facing,
-            .facing = start_facing,
-            .body = body,
-            .head = body.items[0],
-            .tail = null,
-        };
-    }
-
-    pub fn free(self: *Snake) void {
-        self.body.deinit();
-    }
-
-    pub fn grow(self: *Snake) void {
-        self.body.append(self.tail.?) catch unreachable;
-    }
-
     pub fn handleInput(self: *Snake, input: c_int) void {
         switch (input) {
             rl.KEY_UP => self.facing = if (self.facing != .DOWN) .UP else .DOWN,
@@ -74,11 +51,16 @@ pub const Snake = struct {
     pub fn draw(self: *Snake, grid: *Grid) void {
         var char: u8 = undefined;
         for (self.body.items, 0..) |*part, i| {
-            if (part.pos.x < 0 or part.pos.x >= grid.width or part.pos.y < 0 or part.pos.y >= grid.height) continue;
+            if (part.pos.x < 0 or part.pos.x >= grid.width or
+                part.pos.y < 0 or part.pos.y >= grid.height) continue;
             char = misc.getChar(i);
             if (i == 0) char = std.ascii.toUpper(char);
             grid.array[@as(usize, @intCast(part.pos.y))][@as(usize, @intCast(part.pos.x))] = char;
         }
+    }
+
+    pub fn grow(self: *Snake) void {
+        self.body.append(self.tail.?) catch unreachable;
     }
 
     pub fn len(self: *Snake) usize {
@@ -92,7 +74,26 @@ pub const Snake = struct {
         self.head = self.body.items[0];
         self.tail = null;
     }
+
+    pub fn free(self: *Snake) void {
+        self.body.deinit();
+    }
 };
+
+pub fn spawnSnake(length: usize, position: Vec2, facing: Direction, allocator: *const Allocator) !Snake {
+    var body = ArrayList(Part).init(allocator.*);
+    try body.resize(length);
+    initBody(&body, position, facing);
+    return Snake{
+        .start_len = length,
+        .start_pos = position,
+        .start_facing = facing,
+        .facing = facing,
+        .body = body,
+        .head = body.items[0],
+        .tail = null,
+    };
+}
 
 fn initBody(body: *ArrayList(Part), pos: Vec2, facing: Direction) void {
     var offset: i32 = undefined;
