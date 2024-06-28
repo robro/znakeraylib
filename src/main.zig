@@ -5,7 +5,7 @@ const math = @import("math.zig");
 const misc = @import("misc.zig");
 const enums = @import("enums.zig");
 
-const Grid = objects.grid.Grid;
+const Board = objects.board.Board;
 const Snake = objects.snake.Snake;
 const Food = objects.food.Food;
 const State = objects.state.State;
@@ -39,20 +39,14 @@ pub fn main() !void {
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
 
-    const grid_buf = try allocator.allocSentinel(u8, (grid_width + 1) * grid_height, 0);
-    defer allocator.free(grid_buf);
-
-    const hud_buf = try allocator.allocSentinel(u8, 30, 0);
-    defer allocator.free(hud_buf);
-
-    var grid = try objects.grid.spawnGrid(grid_width, grid_height, &allocator);
-    defer grid.free(&allocator);
+    var board = try objects.board.spawnBoard(grid_width, grid_height, &allocator);
+    defer board.free(&allocator);
 
     var snake = try objects.snake.spawnSnake(start_len, start_pos, start_facing, &allocator);
     defer snake.free();
-    snake.draw(&grid); // Prevent food from spawning on top of snake
+    snake.draw(&board); // Prevent food from spawning on top of snake
 
-    var state = try objects.state.spawnState(&grid, &snake, start_fps, fg_colors.len, &allocator);
+    var state = try objects.state.spawnState(&board, &snake, start_fps, fg_colors.len, &allocator);
     defer state.free(&allocator);
 
     while (!rl.WindowShouldClose()) {
@@ -66,11 +60,10 @@ pub fn main() !void {
         rl.BeginDrawing();
         rl.ClearBackground(bg_colors[state.randIdx()]);
 
-        try state.printHUD(&hud_buf);
-        rl.DrawTextEx(font, hud_buf, .{ .x = margin, .y = margin + 8 }, font_size, 0, fg_colors[state.randIdx()]);
+        rl.DrawTextEx(font, try state.scoreString(), .{ .x = margin, .y = margin + 8 }, font_size, 0, fg_colors[state.randIdx()]);
         rl.DrawRectangle(0, hud_height, win_width, win_height, fg_colors[state.randIdx()]);
-        try state.printGrid(&grid_buf);
-        rl.DrawTextEx(font, grid_buf, .{ .x = margin, .y = hud_height + margin }, font_size, margin, font_color);
+        state.draw();
+        rl.DrawTextEx(font, try board.string(), .{ .x = margin, .y = hud_height + margin }, font_size, margin, font_color);
 
         rl.EndDrawing();
     }

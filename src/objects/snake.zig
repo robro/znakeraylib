@@ -9,7 +9,7 @@ const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
 const Direction = enums.Direction;
 const Position = math.Position;
-const Grid = objects.grid.Grid;
+const Board = objects.board.Board;
 
 const Part = struct {
     facing: Direction,
@@ -48,14 +48,14 @@ pub const Snake = struct {
         self.tail = self.body.pop();
     }
 
-    pub fn draw(self: *Snake, grid: *Grid) void {
+    pub fn draw(self: *Snake, board: *Board) void {
         var char: u8 = undefined;
         for (self.body.items, 0..) |*part, i| {
-            if (part.pos.x < 0 or part.pos.x >= grid.width or
-                part.pos.y < 0 or part.pos.y >= grid.height) continue;
+            if (part.pos.x < 0 or part.pos.x >= board.cols or
+                part.pos.y < 0 or part.pos.y >= board.rows) continue;
             char = misc.getChar(i);
             if (i == 0) char = std.ascii.toUpper(char);
-            grid.array[@as(usize, @intCast(part.pos.y))][@as(usize, @intCast(part.pos.x))] = char;
+            board.array[@as(usize, @intCast(part.pos.y)) * board.cols + @as(usize, @intCast(part.pos.x))] = char;
         }
     }
 
