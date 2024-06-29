@@ -12,37 +12,38 @@ const State = objects.state.State;
 const Direction = enums.Direction;
 const Position = math.Position;
 
-pub fn main() !void {
-    // Init -------------------------------------------------------------------
-    const font_size: f32 = 64;
-    const grid_width = 12; // chars
-    const grid_height = 12; // chars
-    const hud_height: c_int = @intFromFloat(font_size * 2);
-    const win_width: c_int = (grid_width + 1) * @as(c_int, (@intFromFloat(font_size)));
-    const win_height: c_int = (grid_height + 1) * @as(c_int, (@intFromFloat(font_size))) + hud_height;
-    const margin: f32 = font_size / 2;
-    const fg_colors = [5]rl.Color{ rl.DARKBLUE, rl.DARKBROWN, rl.DARKGRAY, rl.DARKGREEN, rl.DARKPURPLE };
-    const bg_colors = [5]rl.Color{ rl.BLUE, rl.BROWN, rl.GRAY, rl.GREEN, rl.PURPLE };
-    const start_fps: c_int = 8;
-    const start_len: usize = 3;
-    const start_pos = Position{ .x = grid_width - 4, .y = 5 };
-    const start_facing = Direction.LEFT;
+const grid_cols = 12;
+const grid_rows = 12;
+const hud_height: c_int = @intFromFloat(font_size * 2);
+const win_width: c_int = (grid_cols + 1) * @as(c_int, (@intFromFloat(font_size)));
+const win_height: c_int = (grid_rows + 1) * @as(c_int, (@intFromFloat(font_size))) + hud_height;
+const margin: f32 = font_size / 2;
+const fg_colors = [5]rl.Color{ rl.DARKBLUE, rl.DARKBROWN, rl.DARKGRAY, rl.DARKGREEN, rl.DARKPURPLE };
+const bg_colors = [5]rl.Color{ rl.BLUE, rl.BROWN, rl.GRAY, rl.GREEN, rl.PURPLE };
+const font_color: rl.Color = rl.WHITE;
+const font_size: f32 = 64;
+const font_path = "resources/fonts/consola.ttf";
+const snake_len: usize = 3;
+const snake_pos = Position{ .x = grid_cols - 4, .y = 5 };
+const snake_facing = Direction.LEFT;
+const start_fps: c_int = 8;
+var font: ?rl.Font = null;
 
+pub fn main() !void {
     rl.SetConfigFlags(rl.FLAG_MSAA_4X_HINT | rl.FLAG_VSYNC_HINT);
     rl.InitWindow(win_width, win_height, "Znake");
     defer rl.CloseWindow();
 
-    const font_color: rl.Color = rl.WHITE;
-    const font = rl.LoadFontEx("resources/fonts/consola.ttf", font_size, null, 0);
+    font = rl.LoadFontEx(font_path, font_size, null, 0);
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
 
-    var board = try objects.board.spawnBoard(grid_width, grid_height, &allocator);
+    var board = try objects.board.spawnBoard(grid_cols, grid_rows, &allocator);
     defer board.free(&allocator);
 
-    var snake = try objects.snake.spawnSnake(start_len, start_pos, start_facing, &allocator);
+    var snake = try objects.snake.spawnSnake(snake_len, snake_pos, snake_facing, &allocator);
     defer snake.free();
     snake.draw(&board); // Prevent food from spawning on top of snake
 
@@ -50,21 +51,45 @@ pub fn main() !void {
     defer state.free(&allocator);
 
     while (!rl.WindowShouldClose()) {
-        // Input --------------------------------------------------------------
-        state.handleInput(rl.GetKeyPressed());
-
-        // Update -------------------------------------------------------------
-        try state.update();
-
-        // Draw ---------------------------------------------------------------
-        rl.BeginDrawing();
-        rl.ClearBackground(bg_colors[state.randIdx()]);
-
-        rl.DrawTextEx(font, try state.scoreString(), .{ .x = margin, .y = margin + 8 }, font_size, 0, fg_colors[state.randIdx()]);
-        rl.DrawRectangle(0, hud_height, win_width, win_height, fg_colors[state.randIdx()]);
-        state.draw();
-        rl.DrawTextEx(font, try board.string(), .{ .x = margin, .y = hud_height + margin }, font_size, margin, font_color);
-
-        rl.EndDrawing();
+        handleInput(&state);
+        try update(&state);
+        try draw(&state);
     }
+}
+
+fn handleInput(state: *State) void {
+    state.handleInput(rl.GetKeyPressed());
+}
+
+fn update(state: *State) !void {
+    try state.update();
+}
+
+fn draw(state: *State) !void {
+    rl.BeginDrawing();
+    defer rl.EndDrawing();
+    rl.ClearBackground(bg_colors[state.randIdx()]);
+    rl.DrawTextEx(
+        if (font == null) rl.GetFontDefault() else font.?,
+        try state.scoreString(),
+        .{ .x = margin, .y = margin + 8 },
+        font_size,
+        0,
+        fg_colors[state.randIdx()],
+    );
+    rl.DrawRectangle(
+        0,
+        hud_height,
+        win_width,
+        win_height,
+        fg_colors[state.randIdx()],
+    );
+    rl.DrawTextEx(
+        if (font == null) rl.GetFontDefault() else font.?,
+        try state.boardString(),
+        .{ .x = margin, .y = hud_height + margin },
+        font_size,
+        margin,
+        font_color,
+    );
 }

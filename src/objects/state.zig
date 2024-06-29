@@ -62,6 +62,10 @@ pub const State = struct {
             }
             self.hiscore = @max(self.hiscore, self.score);
         }
+        // Refresh board
+        self.board.clear();
+        self.snake.draw(self.board);
+        self.food.draw(self.board);
     }
 
     pub fn scoreString(self: *State) ![:0]u8 {
@@ -73,11 +77,19 @@ pub const State = struct {
         );
     }
 
-    pub fn draw(self: *State) void {
-        if (self.gameover) return;
-        self.board.clear();
-        self.snake.draw(self.board);
-        self.food.draw(self.board);
+    pub fn boardString(self: *State) ![:0]u8 {
+        var buf = try scratch.scratchBuf(self.board.array.len + self.board.rows);
+        var buf_idx: usize = 0;
+        for (self.board.array, 0..) |c, i| {
+            if (i % self.board.cols == 0 and i != 0) {
+                buf[buf_idx] = '\n';
+                buf_idx += 1;
+            }
+            buf[buf_idx] = c;
+            buf_idx += 1;
+        }
+        buf[buf_idx] = 0;
+        return @ptrCast(buf);
     }
 
     pub fn randIdx(self: *State) usize {
